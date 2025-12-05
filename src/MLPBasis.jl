@@ -1,6 +1,6 @@
 module MLPBasis
 
-    using BlackBoxOptim
+    # using BlackBoxOptim
     using DifferentiationInterface
     using Distributions
     # using ForwardNeuralNetworks
@@ -11,7 +11,8 @@ module MLPBasis
     using StatsFuns
     using Optim
     import Zygote
+    import Mooncake
     
-    include("fitbasis_send.jl"); export fitbasis
+    include("fitbasis_send.jl"); export fitbasis, fit
 
 end
