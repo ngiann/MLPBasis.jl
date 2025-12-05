@@ -10,13 +10,15 @@ function fitbasis(y, σ; K = 3, iterations = 1)
 
 end
 
+ makepos(x) = softplus(x)
+
 ############################################################################
 function fitbasis(y, σ, param; K = 3, iterations = 1)
 ############################################################################
 
     N, D = size(y); @assert(size(σ) == size(y))
 
-    makepos(x) = softplus(x)
+   
 
     @printf("There are %d number of spectra of dimension %d\n", N, D)
     @printf("Learn %d basis functions\n\n", K)
@@ -60,7 +62,7 @@ function fitbasis(y, σ, param; K = 3, iterations = 1)
 
     opt = Optim.Options(iterations = iterations, show_trace = true, show_every = 100, g_tol=1e-9)
 
-    result = optimize(helper, param, ConjugateGradient(), opt, autodiff = AutoZygote())
+    result = optimize(helper, param, ConjugateGradient(), opt, autodiff = AutoMooncake())
 
 
     #--------------------------------------------
@@ -70,10 +72,23 @@ function fitbasis(y, σ, param; K = 3, iterations = 1)
     B, α = unpack(result.minimizer)
 
     
-    #--------------------------------------------
-    # Fitting 
-    #--------------------------------------------
-
     return  B, α, result.minimizer
     
+end
+
+
+function fit(ytest, σtest, B; repeat = 1)
+
+    K = size(B, 1)
+
+    logl(uα) = -0.5*sum(abs2, (vec(makepos.(uα)'*B) - vec(ytest))./vec(σtest))
+
+    opt0 = Optim.Options(iterations = 10000, show_trace = false, show_every = 1, g_tol=1e-12)
+
+    solutions = [optimize(x->-logl(x), 0.1*randn(K), NelderMead(), opt0) for i in 1:repeat]
+
+    bestindex = argmin([s.minimum for s in solutions])
+
+    makepos.(solutions[bestindex].minimizer)
+
 end
